@@ -1,17 +1,16 @@
 const User = require('../models/user');
 
-exports.getUsers = async function getUsers(query) {
+exports.getUsers = async (query) => {
   try {
     return await User.find(query).select('-_id -__v');
   } catch (e) {
-    // Log Errors
-    throw Error('Error while Paginating Users');
+    throw Error('Error while trying to get the users');
   }
 };
 
 exports.getUser = async function getUser(ssn) {
   try {
-    return await User.findOne(ssn).select('-_id -__v');
+    return await User.findOne({ ssn }).select('-_id -__v');
   } catch (e) {
     throw Error('Error while trying to get the user');
   }

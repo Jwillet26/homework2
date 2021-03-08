@@ -1,86 +1,81 @@
 const User = require('../services/user.services');
-// const Error = require('./validationError');
 const NewUser = require('../models/user');
 
-/*
-exports.getUsers = async (request, response) => {
-  await doActionThatMightFailValidation(request, response, async () => {
-    response.json(await User.getUsers(request.query).select('-_id -__v'));
-  });
-};
-*/
-exports.getUsers = async (req, res) => {
-  // Validate request parameters, queries using express-validator
+const doActionThatMightFailValidation = async (request, response, action) => {
   try {
-    const users = await User.getUsers({});
-    return res.status(200).json({ status: 200, data: users, message: 'Successful Users Retrieved' });
+    await action();
   } catch (e) {
-    return res.status(400).json({ status: 400, message: e.message });
+    response.sendStatus(
+      e.code === 11000
+        || e.stack.includes('ValidationError')
+        || (e.reason !== undefined && e.reason.code === 'ERR_ASSERTION')
+        ? 400 : 500,
+    );
   }
 };
+
+exports.getUsers = async (request, response) => {
+  await doActionThatMightFailValidation(request, response, async () => {
+    response.json(await User.getUsers(request.query));
+  });
+};
+
 exports.getUser = async (request, response) => {
-  try {
-    const getResult = await User.getUser({ ssn: request.params.ssn });
+  await doActionThatMightFailValidation(request, response, async () => {
+    const getResult = await User.getUser(request.params.ssn);
     if (getResult != null) {
       response.json(getResult);
     } else {
       response.sendStatus(404);
     }
-  } catch (e) {
-    response.status(500);
-  }
+  });
 };
 exports.PostUser = async (request, response) => {
-  try {
-    const newUser = await new NewUser(request.body).save();
-    return response.status(201).json({ status: 201, data: newUser, message: 'User created successfully' });
-  } catch (e) {
-    return response.status(500).json({ status: 500, message: e.message });
-  }
+  await doActionThatMightFailValidation(request, response, async () => {
+    await new NewUser(request.body).save();
+    response.sendStatus(201);
+  });
 };
 
 exports.deleteUsers = async (request, response) => {
-  try {
-    await User.deleteUsers(request.query);
-    return response.status(200).json({ status: 200 });
-  } catch (e) {
-    return response.status(500).json({ status: 500 });
-  }
+  await doActionThatMightFailValidation(request, response, async () => {
+    response.sendStatus((await User.deleteUsers(request.query)).deletedCount > 0 ? 200 : 404);
+  });
 };
 
 exports.deleteUser = async (request, response) => {
-  try {
-    await User.deleteUser({ ssn: request.params.ssn });
-    return response.status(200).json({ status: 200 });
-  } catch (e) {
-    return response.status(500).json({ status: 500 });
-  }
+  await doActionThatMightFailValidation(request, response, async () => {
+    response.sendStatus((await User.deleteUser({
+      ssn: request.params.ssn,
+    })).deletedCount > 0 ? 200 : 404);
+  });
 };
 
 exports.putUser = async (request, response) => {
-  try {
-    const { ssn } = request.params;
-    const user = request.body;
-    user.ssn = ssn;
-    await User.putUser({ ssn: request.params.ssn }, user);
+  const { ssn } = request.params;
+  const user = request.body;
+  user.ssn = ssn;
+  await doActionThatMightFailValidation(request, response, async () => {
+    await User.putUser({ ssn: request.params.ssn }, user, {
+      upsert: true,
+    });
     response.sendStatus(200);
-  } catch (e) {
-    response.sendStatus(500);
-  }
+  });
 };
 
 exports.patchUser = async (request, response) => {
-  try {
-    const { ssn } = request.params;
-    const user = request.body;
-    delete user.ssn;
-    const patchResult = await User.patchUser({ ssn }, user, { new: true });
+  const { ssn } = request.params;
+  const user = request.body;
+  delete user.sku;
+  await doActionThatMightFailValidation(request, response, async () => {
+    const patchResult = await User
+      .patchUser({ ssn }, user, {
+        new: true,
+      });
     if (patchResult != null) {
       response.json(patchResult);
     } else {
       response.sendStatus(404);
     }
-  } catch (e) {
-    response.sendStatus(500);
-  }
+  });
 };

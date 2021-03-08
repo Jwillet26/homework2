@@ -35,7 +35,7 @@ module.exports = Mongoose.model('User', new Mongoose.Schema({
     max: 12,
     validate: {
       validator(value) {
-        return /\d(3)-\d(3)-\d(4)/.test(value);
+        return /\d{3}-\d{3}-\d{4}/.test(value);
       },
     },
   },
