@@ -7,4 +7,4 @@
 
 #useless directories
 _MACOSX/
-
+node_modules/
