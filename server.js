@@ -2,12 +2,19 @@ const Express = require('express');
 const BodyParser = require('body-parser');
 const Mongoose = require('mongoose');
 
-const Product = require('./models/product');
+require('dotenv').config();
+
+const UserRoute = require('./router/user.routes');
+const ProductRoute = require('./router/product.routes');
 
 const app = Express();
 
 app.use(BodyParser.json());
 
+app.use('/', ProductRoute);
+app.use('/', UserRoute);
+
+/*
 const doActionThatMightFailValidation = async (request, response, action) => {
   try {
     await action();
@@ -88,9 +95,10 @@ app.patch('/products/:sku', async (request, response) => {
     }
   });
 });
+*/
 
 (async () => {
-  await Mongoose.connect('mongodb+srv://admin:admin@cluster0-cde82.mongodb.net/mongodb?retryWrites=true&w=majority', {
+  await Mongoose.connect(process.env.MONGO_DB_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useFindAndModify: false,
@@ -98,3 +106,7 @@ app.patch('/products/:sku', async (request, response) => {
   });
   app.listen(8000);
 })();
+
+module.exports = {
+  app,
+};

@@ -3,6 +3,8 @@
 /workspace.xml
 # Editor-based HTTP Client requests
 /httpRequests/
+.env
 
 #useless directories
 _MACOSX/
+
