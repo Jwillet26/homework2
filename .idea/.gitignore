@@ -3,6 +3,8 @@
 /workspace.xml
 # Editor-based HTTP Client requests
 /httpRequests/
+
+# Ignore all env files
 .env
 
 #useless directories
